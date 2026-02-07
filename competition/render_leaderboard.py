@@ -3,7 +3,6 @@ import yaml
 import os
 
 def render_leaderboard():
-    # ... (config loading part is fine) ...
     try:
         with open('competition/config.yaml', 'r') as f:
             config = yaml.safe_load(f)
