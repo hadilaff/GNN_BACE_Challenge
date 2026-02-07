@@ -1,7 +1,9 @@
 import pandas as pd
 import torch
 import torch.nn.functional as F
-from torch_geometric.data import Data, DataLoader
+# FIX 1: Updated the import for DataLoader
+from torch_geometric.data import Data
+from torch_geometric.loader import DataLoader
 from torch_geometric.nn import GCNConv, global_mean_pool
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import f1_score
@@ -24,15 +26,12 @@ def load_graphs_from_csv(nodes_path, edges_path, labels_path=None):
     graph_ids = nodes_df['graph_id'].unique()
 
     for graph_id in graph_ids:
-        # Get nodes and edges for the current graph
         graph_nodes = nodes_df[nodes_df['graph_id'] == graph_id]
         graph_edges = edges_df[edges_df['graph_id'] == graph_id]
 
-        # Node features
         node_features = graph_nodes.drop(columns=['graph_id', 'node_id']).values
         x = torch.tensor(node_features, dtype=torch.float)
 
-        # Edge index
         if not graph_edges.empty:
             edge_index = torch.tensor(graph_edges[['src', 'dst']].values, dtype=torch.long).t().contiguous()
             edge_attr = torch.tensor(graph_edges[['ef_0']].values, dtype=torch.float)
@@ -40,10 +39,8 @@ def load_graphs_from_csv(nodes_path, edges_path, labels_path=None):
             edge_index = torch.empty((2, 0), dtype=torch.long)
             edge_attr = torch.empty((0, 1), dtype=torch.float)
 
-        # Create PyG Data object
         data = Data(x=x, edge_index=edge_index, edge_attr=edge_attr)
         
-        # Add label if available
         if graph_id in graph_labels:
             data.y = torch.tensor([graph_labels[graph_id]], dtype=torch.long)
         
@@ -78,23 +75,26 @@ if __name__ == '__main__':
         '../data/public/train_labels.csv'
     )
     
-    # Split training data for validation
     train_graphs, val_graphs = train_test_split(train_graphs, test_size=0.2, random_state=42)
 
     train_loader = DataLoader(train_graphs, batch_size=32, shuffle=True)
     val_loader = DataLoader(val_graphs, batch_size=32, shuffle=False)
 
-    # Determine input feature dimension from the first graph
+    # FIX 2: Define the device variable once
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    print(f"Using device: {device}")
+
     in_channels = train_graphs[0].num_node_features
-    model = GCN(in_channels=in_channels, hidden_channels=64).to('cuda' if torch.cuda.is_available() else 'cpu')
+    model = GCN(in_channels=in_channels, hidden_channels=64).to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
     criterion = torch.nn.CrossEntropyLoss()
 
-    # Training loop (same as before)
+    # Training loop
     def train():
         model.train()
         for data in train_loader:
-            data = data.to(model.device)
+            # FIX 2: Use the 'device' variable
+            data = data.to(device)
             optimizer.zero_grad()
             out = model(data.x, data.edge_index, data.batch, data.edge_attr)
             loss = criterion(out, data.y)
@@ -107,7 +107,8 @@ if __name__ == '__main__':
         all_labels = []
         with torch.no_grad():
             for data in loader:
-                data = data.to(model.device)
+                # FIX 2: Use the 'device' variable
+                data = data.to(device)
                 out = model(data.x, data.edge_index, data.batch, data.edge_attr)
                 pred = out.argmax(dim=1)
                 all_preds.append(pred.cpu())
@@ -136,7 +137,8 @@ if __name__ == '__main__':
     all_ids = []
     with torch.no_grad():
         for data in test_loader:
-            data = data.to(model.device)
+            # FIX 2: Use the 'device' variable
+            data = data.to(device)
             out = model(data.x, data.edge_index, data.batch, data.edge_attr)
             pred = out.argmax(dim=1)
             all_preds.append(pred.cpu())
