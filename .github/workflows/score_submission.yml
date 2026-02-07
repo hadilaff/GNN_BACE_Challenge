@@ -1,1 +1,79 @@
-# GitHub Actions scoring workflow placeholder
+# .github/workflows/score_submission.yml
+
+name: Score Submission
+
+on:
+  pull_request:
+    types: [opened, synchronize] # Runs when a PR is opened or new commits are pushed
+    paths:
+      - 'submissions/inbox/*.csv' # Only runs for new submission files
+
+jobs:
+  score:
+    runs-on: ubuntu-latest
+    permissions:
+      # Allow the action to write to the repository
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          # Fetch the full history to get the main branch for comparison
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install dependencies
+        run: |
+          pip install -r starter_code/requirements.txt
+          pip install -r competition/requirements.txt
+
+      - name: Find submission file
+        id: find_file
+        run: |
+          # Find the CSV file that was added in this PR
+          SUBMISSION_FILE=$(git diff --name-only --diff-filter=A origin/main...HEAD | grep 'submissions/inbox/.*.csv')
+          if [ -z "$SUBMISSION_FILE" ]; then
+            echo "No new submission file found."
+            exit 1
+          fi
+          echo "Found submission file: $SUBMISSION_FILE"
+          echo "submission_file=$SUBMISSION_FILE" >> $GITHUB_OUTPUT
+
+      - name: Run evaluation
+        id: evaluate
+        run: |
+          # Run the evaluation script and capture the score
+          SCORE=$(python -c "
+          import sys; sys.path.append('competition');
+          from evaluate import run_evaluation;
+          score = run_evaluation('${{ steps.find_file.outputs.submission_file }}');
+          print(f'{score:.6f}')
+          ")
+          echo "score=$SCORE" >> $GITHUB_OUTPUT
+          echo "Evaluation complete. Score: $SCORE"
+
+      - name: Update leaderboard
+        run: |
+          # Get current time for the timestamp
+          TIMESTAMP_UTC=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          
+          # Extract team/model name from PR branch or title
+          # Example: "team-awesome-model-v2"
+          TEAM_MODEL_NAME="${{ github.head_ref }}"
+          
+          # Append the new result to the leaderboard CSV
+          echo "${{ github.event.number }},${TEAM_MODEL_NAME},${{ steps.evaluate.outputs.score }},${TIMESTAMP_UTC},\"PR #${{ github.event.number }}\"" >> leaderboard/leaderboard.csv
+
+      - name: Commit and push leaderboard update
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add leaderboard/leaderboard.csv
+          git commit -m "Add submission from PR #${{ github.event.number }} to leaderboard"
+          git push
