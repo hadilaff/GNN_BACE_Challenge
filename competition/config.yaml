@@ -1,0 +1,15 @@
+data:
+  public_dir: "data/public"
+  test_labels_file: "test_labels.csv"
+
+submissions:
+  inbox_dir: "submissions/inbox"
+  submission_file_pattern: "*.csv"
+
+leaderboard:
+  file: "leaderboard/leaderboard.csv"
+  md_file: "leaderboard/leaderboard.md"
+
+metrics:
+  target_column: "target"
+  id_column: "id"
