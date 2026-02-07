@@ -1,70 +1,36 @@
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Leaderboard</title>
-  <link rel="stylesheet" href="leaderboard.css" />
-</head>
-<body>
-  <header class="wrap">
-    <div class="title-row">
-      <h1>Leaderboard</h1>
-      <p class="sub">Search, filter, and compare submissions. Scores are computed on the hidden test set by the official evaluator.</p>
-    </div>
-  </header>
 
-  <main class="wrap">
-    <section class="controls card">
-      <div class="control">
-        <label for="search">Search</label>
-        <input id="search" type="search" placeholder="Search team, model, notes…" />
-      </div>
-
-      <div class="control">
-        <label for="modelFilter">Model</label>
-        <select id="modelFilter">
-          <option value="all">All</option>
-        </select>
-      </div>
-
-      <div class="control">
-        <label for="dateFilter">Date</label>
-        <select id="dateFilter">
-          <option value="all">All</option>
-          <option value="last30">Last 30 days</option>
-          <option value="last180">Last 180 days</option>
-        </select>
-      </div>
-
-      <div class="control">
-        <label>Columns</label>
-        <div class="checks" id="columnToggles"></div>
-      </div>
-    </section>
-
-    <section class="card">
-      <div class="table-wrap">
-        <table id="tbl">
-          <thead>
-            <tr>
-              <th data-key="rank" data-sort="number">Rank</th>
-              <th data-key="team" data-sort="string">Team</th>
-              <th data-key="model" data-sort="string">Model</th>
-              <th data-key="score" data-sort="number">Score</th>
-              <th data-key="timestamp_utc" data-sort="string">Date (UTC)</th>
-              <th data-key="notes" data-sort="string">Notes</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-      </div>
-      <div class="foot">
-        <span id="status">Loading leaderboard…</span>
-      </div>
-    </section>
-  </main>
-
-  <script src="leaderboard.js"></script>
-</body>
-</html>
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>GNN Challenge Leaderboard</title>
+        <style> ... </style>
+    </head>
+    <body>
+        <h1>📊 Leaderboard</h1>
+        <p>This leaderboard is automatically updated after each valid submission.</p>
+        <table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>Rank</th>
+      <th>Team</th>
+      <th>Model</th>
+      <th>Score (Macro F1)</th>
+      <th>Submitted At (UTC)</th>
+      <th>Notes</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>1</td>
+      <td>default_team</td>
+      <td>my_test</td>
+      <td>0.577858</td>
+      <td>2026-02-07T12:59:51Z</td>
+      <td>PR #2</td>
+    </tr>
+  </tbody>
+</table>
+    </body>
+    </html>
+    
