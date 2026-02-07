@@ -29,7 +29,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install -r starter_code/requirements.txt
+          pip install -r requirements.txt
           pip install -r competition/requirements.txt
 
       - name: Find submission file
