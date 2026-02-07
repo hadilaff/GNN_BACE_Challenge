@@ -1,7 +1,7 @@
 # competition/evaluate.py
 import pandas as pd
 import yaml
-from .metrics import calculate_macro_f1 # Assuming metrics.py is in the same dir
+from competition.metrics import calculate_macro_f1 # Assuming metrics.py is in the same dir
 
 def run_evaluation(submission_path, config_path='competition/config.yaml'):
     """Runs the evaluation and returns the score."""
