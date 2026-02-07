@@ -80,9 +80,9 @@ jobs:
           # Extract team/model name from PR branch or title
           TEAM_MODEL_NAME="${{ github.head_ref }}"
           
-          # Append the new result to the leaderboard CSV
-          echo "Appending to leaderboard/leaderboard.csv"
-          echo "${{ github.event.number }},${TEAM_MODEL_NAME},${{ steps.evaluate.outputs.score }},${TIMESTAMP_UTC},\"PR #${{ github.event.number }}\"" >> leaderboard/leaderboard.csv
+          # IMPORTANT: Append the new result in the correct column order
+          # Order: timestamp_utc,team,model,score,notes
+          echo "${TIMESTAMP_UTC},default_team,${TEAM_MODEL_NAME},${{ steps.evaluate.outputs.score }},\"PR #${{ github.event.number }}\"" >> leaderboard/leaderboard.csv
           
           echo "Current leaderboard content:"
           cat leaderboard/leaderboard.csv
