@@ -14,14 +14,27 @@ def render_leaderboard():
         return
 
     # Read the CSV data
+    # ... (after the config loading part)
     try:
         df = pd.read_csv(leaderboard_path)
     except Exception as e:
         print(f"Error reading or parsing CSV: {e}")
         return
 
+    # --- ADD THESE DEBUGGING LINES ---
+    print("--- DEBUGGING LEADERBOARD SCRIPT ---")
+    print(f"DataFrame is empty: {df.empty}")
+    if not df.empty:
+        print("DataFrame head:")
+        print(df.head())
+    else:
+        print("DataFrame is empty. No data to render.")
+    print("--- END DEBUGGING ---")
+    # ------------------------------------
+
     # Sort by score (descending)
     df = df.sort_values(by=['score'], ascending=False)
+    # ... (rest of the script)
 
     # Create a rank column
     df['rank'] = range(1, len(df) + 1)
