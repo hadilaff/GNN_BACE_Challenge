@@ -4,15 +4,14 @@ name: Score Submission
 
 on:
   pull_request:
-    types: [opened, synchronize] # Runs when a PR is opened or new commits are pushed
+    types: [opened, synchronize]
     paths:
-      - 'submissions/inbox/*.csv' # Only runs for new submission files
+      - 'submissions/inbox/*.csv'
 
 jobs:
   score:
     runs-on: ubuntu-latest
     permissions:
-      # Allow the action to write to the repository
       contents: write
       pull-requests: write
 
@@ -20,7 +19,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          # Fetch the full history to get the main branch for comparison
+          # Fetch the full history to get the main branch
           fetch-depth: 0
 
       - name: Set up Python
@@ -36,44 +35,67 @@ jobs:
       - name: Find submission file
         id: find_file
         run: |
-          # Find the CSV file that was added in this PR
-          SUBMISSION_FILE=$(git diff --name-only --diff-filter=A origin/main...HEAD | grep 'submissions/inbox/.*.csv')
+          echo "Searching for submission file in submissions/inbox/"
+          # List all files to see what's there
+          ls -R submissions/inbox/
+          
+          # Find the first CSV file
+          SUBMISSION_FILE=$(find submissions/inbox/ -name '*.csv' -type f | head -n 1)
+          
           if [ -z "$SUBMISSION_FILE" ]; then
-            echo "No new submission file found."
+            echo "Error: No submission file found."
             exit 1
           fi
+          
           echo "Found submission file: $SUBMISSION_FILE"
           echo "submission_file=$SUBMISSION_FILE" >> $GITHUB_OUTPUT
 
       - name: Run evaluation
         id: evaluate
         run: |
-          # Run the evaluation script and capture the score
-          SCORE=$(python -c "
+          echo "Running evaluation on ${{ steps.find_file.outputs.submission_file }}"
+          # Use a python block for cleaner output
+          SCORE=$(python - <<EOF
           import sys; sys.path.append('competition');
           from evaluate import run_evaluation;
           score = run_evaluation('${{ steps.find_file.outputs.submission_file }}');
           print(f'{score:.6f}')
-          ")
-          echo "score=$SCORE" >> $GITHUB_OUTPUT
+          EOF
+          )
           echo "Evaluation complete. Score: $SCORE"
+          echo "score=$SCORE" >> $GITHUB_OUTPUT
 
       - name: Update leaderboard
         run: |
+          echo "Updating leaderboard..."
+          
+          # Switch to the main branch to update the leaderboard file
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout main
+          git pull origin main
+          
           # Get current time for the timestamp
           TIMESTAMP_UTC=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
           
           # Extract team/model name from PR branch or title
-          # Example: "team-awesome-model-v2"
           TEAM_MODEL_NAME="${{ github.head_ref }}"
           
           # Append the new result to the leaderboard CSV
+          echo "Appending to leaderboard/leaderboard.csv"
           echo "${{ github.event.number }},${TEAM_MODEL_NAME},${{ steps.evaluate.outputs.score }},${TIMESTAMP_UTC},\"PR #${{ github.event.number }}\"" >> leaderboard/leaderboard.csv
+          
+          echo "Current leaderboard content:"
+          cat leaderboard/leaderboard.csv
 
       - name: Commit and push leaderboard update
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
+          echo "Committing and pushing leaderboard update..."
           git add leaderboard/leaderboard.csv
+          if git diff --staged --quiet; then
+            echo "No changes to commit. Something went wrong."
+            exit 1
+          fi
           git commit -m "Add submission from PR #${{ github.event.number }} to leaderboard"
-          git push
+          git push origin main
+          echo "Leaderboard update pushed successfully."
