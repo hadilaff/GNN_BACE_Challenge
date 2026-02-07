@@ -62,14 +62,14 @@ Submissions will be ranked by the Macro F1-Score. This metric is essential here 
 
 The leaderboard is automatically updated after each submission is scored. It ranks all submissions by their Macro F1-Score in descending order. 
 
-Click here to see the current leaderboard  
+Click here to see the current leaderboard : [Leaderboard](https://hadilaff.github.io/GNN_BACE_Challenge/leaderboard.html) 
 How to Get Started 
 
 Ready to dive in? It only takes a few minutes to get a baseline model running. 
 
    1. Clone the Repository:
 ``` code
-git clone https://github.com/[YOUR_USERNAME]/gnn-challenge
+git clone https://github.com/hadilaff/GNN_BACE_Challenge
 cd gnn-challenge
 ```
    2. Set Up Your Environment (a virtual environment is highly recommended):
