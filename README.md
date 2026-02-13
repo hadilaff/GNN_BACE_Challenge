@@ -3,6 +3,34 @@
 Welcome to the GNN Mini-Challenge! Your task is to build a Graph Neural Network that can predict whether a molecule will inhibit the BACE-1 enzyme, a key target in Alzheimer's disease research.
 This challenge is not just about getting the highest score, but about exploring how GNNs can learn meaningful chemical properties directly from a molecule's structure.
 
+
+## Competition Workflow
+
+```mermaid
+graph TD
+    subgraph Data_Preparation
+        Raw[Raw BACE Data] --> Split[Scaffold Splitter]
+        Split -->|Train Set| Imbalance[Class Imbalance Downsampling]
+        Split -->|Test Set| Test[Test Set Evaluation]
+        Imbalance --> Train[Train Set Imbalanced]
+    end
+
+    subgraph Participant_Workflow
+        Train --> Model[Train GNN Model]
+        Test --> Pred[Generate Predictions]
+        Model --> Pred
+        Pred --> CSV[Submission.csv]
+        CSV --> PR[GitHub Pull Request]
+    end
+
+    subgraph Automated_Evaluation
+        PR --> Check[Eligibility Check]
+        Check -->|Pass| Score[Score Submission]
+        Score --> Board[Update Leaderboard]
+        Board --> Close[Auto-Close PR]
+    end
+```
+
 ## The Challenge Philosophy: Why Only SMILES?
 
 In many machine learning tasks, you are given a rich table of pre-calculated features. In this challenge, we are doing something different.
@@ -37,11 +65,28 @@ The data is located in the data/public/ directory and is split into node and edg
 
 
 
+### Graph Specification
+
+To align with standard GNN formulation:
+
+-   **Node Feature Matrix ($X$)**:
+    -   Provided in `train_nodes.csv` and `test_nodes.csv`.
+    -   Each row corresponds to a node $v_i$.
+    -   Columns `nf_0` to `nf_7` represent the feature vector $x_i$ (One-hot encoded atom type, dim=8).
+
+-   **Adjacency Matrix ($A$)**:
+    -   Provided in `train_edges.csv` and `test_edges.csv`.
+    -   Represented as a sparse Edge List (COO format).
+    -   Columns `src` and `dst` define the edges $(u, v)$ such that $A_{uv} = 1$.
+    -   The graph is undirected.
+
+
 ### Data Challenges
 
 To make this a realistic challenge, the data includes: 
 
-     Class Imbalance: There are more inactive molecules than active ones. This is why we use the Macro F1-score.
+     Class Imbalance: The training set is heavily imbalanced (~10% active) to mimic real-world screening. The test set follows a different distribution.
+     Distribution Shift: The dataset uses a **Scaffold Split**, meaning the test set contains molecules with different chemical backbones than the training set. Your model must generalize to new chemical space!
      Variable Graph Sizes: Molecules have different numbers of atoms and bonds, so your model must handle batched graphs of varying sizes.
      
 
@@ -57,6 +102,8 @@ Your goal is to solve a graph classification problem. Your GNN must analyze the 
 ## Evaluation: The Macro F1-Score 
 
 Submissions will be ranked by the Macro F1-Score. This metric is essential here because it calculates the F1-score for each class independently and then averages them, giving equal importance to both the minority (active) and majority (inactive) classes.
+
+**Ranking Policy**: We follow Kaggle guidelines—tied scores share the same rank (e.g., if two teams have the top score, both are Rank 1, and the next team is Rank 3).
 
 ## 📊 Leaderboard 
 
@@ -85,7 +132,11 @@ This will train a simple Graph Convolutional Network (GCN) and generate a submis
 
 ## Submission Format 
 
-To submit your results, create a CSV file with two columns: id and target. Place your submission file in the submissions/inbox/ directory and create a pull request to merge it. 
+To submit your results, create a CSV file with two columns: id and target. Place your submission file in the submissions/inbox/ directory and create a pull request.
+
+> [!NOTE]
+> **Automated Scoring**: Your PR will be automatically scored by GitHub Actions. If successful, your score will be added to the leaderboard and the PR will be **closed automatically** (it will not be merged).
+ 
 ``` text
 
 id,target
@@ -93,6 +144,14 @@ BACE_1234,0
 BACE_1235,1
 ...
 ```
+
+### Submission Policy
+
+> [!WARNING]
+> **One Submission Rule**: To encourage thoughtful model design, each participant is allowed **only one successful submission**.
+
+Once your submission is scored and appears on the leaderboard, you cannot submit again. Please verify your model locally before submitting!
+
 
 
 
@@ -111,9 +170,9 @@ gnn-challenge/
 │   ├── config.yaml
 │   ├── evaluate.py
 │   └── render_leaderboard.py
+    └── check_eligibility.py
 ├── starter_code/           # Baseline model & dependencies
 │   ├── baseline.py
-│   └── requirements.txt
 ├── submissions/
 │   └── inbox/             # Place your submission CSVs here
 ├── leaderboard/           # Auto-updated rankings
@@ -121,6 +180,8 @@ gnn-challenge/
 │   └── leaderboard.md
 ├── .github/workflows/     # Automation for scoring & leaderboard
 ├── README.md
+└── requirements.txt
+└── requirements.txt
 └── LICENSE                
 ```
 

@@ -23,7 +23,7 @@ def render_leaderboard():
     df = df.sort_values(by=['score'], ascending=False)
 
     # Create a rank column
-    df['rank'] = range(1, len(df) + 1)
+    df['rank'] = df['score'].rank(method='min', ascending=False).astype(int)
 
     # Reorder columns for display to match the CSV header
     display_df = df[['rank', 'team', 'model', 'score', 'timestamp_utc', 'notes']]

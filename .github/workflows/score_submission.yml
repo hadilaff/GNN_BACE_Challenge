@@ -41,6 +41,7 @@ jobs:
           # Find the first CSV file
           SUBMISSION_FILE=$(find submissions/inbox/ -name '*.csv' -type f | head -n 1)
           
+
           if [ -z "$SUBMISSION_FILE" ]; then
             echo "Error: No submission file found."
             exit 1
@@ -48,6 +49,11 @@ jobs:
           
           echo "Found submission file: $SUBMISSION_FILE"
           echo "submission_file=$SUBMISSION_FILE" >> $GITHUB_OUTPUT
+
+      - name: Check Eligibility
+        run: |
+          echo "Checking eligibility for user: ${{ github.actor }}"
+          python competition/check_eligibility.py "${{ github.actor }}"
 
       - name: Run evaluation
         id: evaluate
@@ -82,7 +88,8 @@ jobs:
           
           # IMPORTANT: Append the new result in the correct column order
           # Order: timestamp_utc,team,model,score,notes
-          echo "${TIMESTAMP_UTC},default_team,${TEAM_MODEL_NAME},${{ steps.evaluate.outputs.score }},\"PR #${{ github.event.number }}\"" >> leaderboard/leaderboard.csv
+          # Team is now the github.actor to enforce one submission per person
+          echo "${TIMESTAMP_UTC},${{ github.actor }},${TEAM_MODEL_NAME},${{ steps.evaluate.outputs.score }},\"PR #${{ github.event.number }}\"" >> leaderboard/leaderboard.csv
           
           echo "Current leaderboard content:"
           cat leaderboard/leaderboard.csv
@@ -98,3 +105,14 @@ jobs:
           git commit -m "Add submission from PR #${{ github.event.number }} to leaderboard"
           git push origin main
           echo "Leaderboard update pushed successfully."
+
+      - name: Close Pull Request
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "Closing Pull Request to prevent submission file from entering main..."
+          gh pr close ${{ github.event.number }} --comment "✅ **Submission Scored!** 
+          
+          Your score has been recorded on the [Leaderboard](../blob/main/leaderboard/leaderboard.md).
+          This PR is now closed to keep the repository clean.
+          " --delete-branch

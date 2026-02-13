@@ -68,8 +68,63 @@ edge_cols = ['graph_id', 'src', 'dst', 'ef_0']
 print(f"Node feature columns will be: {node_cols}")
 
 
-# Split data
-train_df, test_df = train_test_split(df, test_size=0.25, stratify=df['target'], random_state=RANDOM_STATE)
+# --- NEW: Scaffold Splitting & Class Imbalance ---
+from collections import defaultdict
+from rdkit.Chem.Scaffolds import MurckoScaffold
+
+def generate_scaffold(smiles, include_chirality=False):
+    """Compute the Bemis-Murcko scaffold for a SMILES string."""
+    mol = Chem.MolFromSmiles(smiles)
+    if mol is None:
+        return None
+    scaffold = MurckoScaffold.MurckoScaffoldSmiles(mol=mol, includeChirality=include_chirality)
+    return scaffold
+
+def scaffold_split(df, smile_col='smiles', balanced=False, seed=42):
+    """
+    Split the dataset based on scaffolds.
+    grouped data such that scaffolds in test set are different from those in train set.
+    """
+    scaffolds = defaultdict(list)
+    for idx, row in df.iterrows():
+        scaffold = generate_scaffold(row[smile_col])
+        if scaffold:
+            scaffolds[scaffold].append(idx)
+
+    # Sort scaffolds by size (largest first) to pack them efficiently
+    scaffold_sets = sorted(scaffolds.values(), key=len, reverse=True)
+
+    train_inds, test_inds = [], []
+    train_cutoff = 0.75 * len(df)
+
+    for scaffold_set in scaffold_sets:
+        if len(train_inds) + len(scaffold_set) > train_cutoff:
+            test_inds.extend(scaffold_set)
+        else:
+            train_inds.extend(scaffold_set)
+
+    return df.loc[train_inds], df.loc[test_inds]
+
+# 1. Scaffold Split
+print("Performing Scaffold Split...")
+train_df, test_df = scaffold_split(df)
+print(f"Train/Test Split: {len(train_df)}/{len(test_df)}")
+
+# 2. Induce Class Imbalance (Training Set Only)
+# Goal: Reduce actives (target=1) to ~10% of the training set
+print("Inducing Class Imbalance in Training Set...")
+train_zeros = train_df[train_df['target'] == 0]
+train_ones = train_df[train_df['target'] == 1]
+
+# Calculate how many ones we want
+# N_1 = N_0 / 9  (approx, to get 10% prevalence)
+target_ones_count = int(len(train_zeros) / 9)
+if len(train_ones) > target_ones_count:
+    train_ones = train_ones.sample(n=target_ones_count, random_state=RANDOM_STATE)
+    train_df = pd.concat([train_zeros, train_ones]).sample(frac=1, random_state=RANDOM_STATE).reset_index(drop=True)
+    print(f"Downsampled actives. New Training Class Balance: \n{train_df['target'].value_counts(normalize=True)}")
+else:
+    print("Warning: Not enough actives to downsample to 10% (already low or calc issue).")
 
 # --- Process and Save Data ---
 os.makedirs(OUTPUT_DIR, exist_ok=True)
