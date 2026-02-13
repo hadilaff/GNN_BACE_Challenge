@@ -35,10 +35,14 @@ jobs:
           if git diff --quiet; then
             echo "No changes to leaderboard."
             exit 0
-          fi
           git config user.name "github-actions"
           git config user.email "github-actions@users.noreply.github.com"
-          # Add both the markdown and the new html file
-          git add leaderboard/leaderboard.md docs/leaderboard.html 
-          git commit -m "Update leaderboard"
+          git add docs/leaderboard.html leaderboard.md
+          git commit -m "Update leaderboard HTML" || echo "No changes to commit"
           git push
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./docs
