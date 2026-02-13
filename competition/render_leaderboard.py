@@ -50,7 +50,14 @@ def render_leaderboard():
     with open(html_path, 'w') as f:
         f.write(html_content)
     
-    print(f"Leaderboard successfully rendered to {html_path}")
+    # Save as Markdown
+    md_path = 'leaderboard/leaderboard.md'
+    with open(md_path, 'w') as f:
+        f.write("# 📊 Leaderboard\n\n")
+        f.write("This leaderboard is automatically updated after each valid submission.\n\n")
+        f.write(display_df.to_markdown(index=False))
+    
+    print(f"Leaderboard successfully rendered to {html_path} and {md_path}")
 
 if __name__ == '__main__':
     render_leaderboard()
