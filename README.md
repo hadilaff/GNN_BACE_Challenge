@@ -121,7 +121,7 @@ cd gnn-challenge
 ```
    2. Set Up Your Environment (a virtual environment is highly recommended):
    ``` code
-   pip install -r starter_code/requirements.txt
+   pip install -r requirements.txt
 ``` 
    3. Run the Baseline Model: 
    ``` code
