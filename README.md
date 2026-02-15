@@ -132,18 +132,43 @@ This will train a simple Graph Convolutional Network (GCN) and generate a submis
 
 ## Submission Format 
 
-To submit your results, create a CSV file with two columns: id and target. Place your submission file in the submissions/inbox/ directory and create a pull request.
+To submit your results, you must **encrypt** your submission file before creating a pull request. This ensures the test set predictions remain private.
+
+### Step-by-Step Submission Process
+
+1. **Generate your predictions** using the baseline or your own model:
+   ```bash
+   cd starter_code
+   python baseline.py
+   ```
+   This creates `submissions/inbox/submission.csv` with two columns: `id` and `target`.
+
+2. **Encrypt your submission**:
+   ```bash
+   python competition/encrypt_submission.py submissions/inbox/submission.csv
+   ```
+   This creates `submissions/inbox/submission.enc` (encrypted file).
+
+3. **Create a new branch and commit the encrypted file**:
+   ```bash
+   git checkout -b my-submission
+   git add submissions/inbox/submission.enc
+   git commit -m "Add encrypted submission"
+   git push -u origin my-submission
+   ```
+
+4. **Open a Pull Request** on GitHub.
 
 > [!NOTE]
-> **Automated Scoring**: Your PR will be automatically scored by GitHub Actions. If successful, your score will be added to the leaderboard and the PR will be **closed automatically** (it will not be merged).
- 
-``` text
+> **Automated Scoring**: Your PR will be automatically scored by GitHub Actions. The workflow will:
+> - Decrypt your submission securely
+> - Score it against the private test set
+> - Update the leaderboard
+> - **Close the PR automatically** (it will not be merged)
+> - **Delete your branch** to keep the repository clean
 
-id,target
-BACE_1234,0
-BACE_1235,1
-...
-```
+> [!IMPORTANT]
+> **Security**: Only submit the `.enc` file, never the `.csv` file. The encryption ensures test set predictions remain confidential.
 
 ### Submission Policy
 
