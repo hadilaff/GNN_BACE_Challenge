@@ -6,7 +6,7 @@ on:
   pull_request:
     types: [opened, synchronize]
     paths:
-      - 'submissions/inbox/*.csv'
+      - 'submissions/inbox/*.enc'
 
 jobs:
   score:
@@ -38,17 +38,32 @@ jobs:
           # List all files to see what's there
           ls -R submissions/inbox/
           
-          # Find the first CSV file
-          SUBMISSION_FILE=$(find submissions/inbox/ -name '*.csv' -type f | head -n 1)
+          # Find the first ENC file
+          SUBMISSION_FILE=$(find submissions/inbox/ -name '*.enc' -type f | head -n 1)
           
-
           if [ -z "$SUBMISSION_FILE" ]; then
-            echo "Error: No submission file found."
+            echo "Error: No encrypted submission file found."
             exit 1
           fi
           
           echo "Found submission file: $SUBMISSION_FILE"
           echo "submission_file=$SUBMISSION_FILE" >> $GITHUB_OUTPUT
+
+      - name: Decrypt submission
+        id: decrypt
+        env:
+          SUBMISSION_PRIVATE_KEY: ${{ secrets.SUBMISSION_PRIVATE_KEY }}
+        run: |
+          echo "Decrypting submission..."
+          python competition/decrypt_submission.py "${{ steps.find_file.outputs.submission_file }}"
+          
+          if [ ! -f "decrypted_submission.csv" ]; then
+            echo "Error: Decryption failed or file not created."
+            exit 1
+          fi
+          
+          echo "Decryption successful."
+          echo "decrypted_file=decrypted_submission.csv" >> $GITHUB_OUTPUT
 
       - name: Check Eligibility
         run: |
@@ -58,17 +73,20 @@ jobs:
       - name: Run evaluation
         id: evaluate
         run: |
-          echo "Running evaluation on ${{ steps.find_file.outputs.submission_file }}"
+          echo "Running evaluation on decrypted file"
           # Use a python block for cleaner output
           SCORE=$(python - <<EOF
           import sys; sys.path.append('competition');
           from evaluate import run_evaluation;
-          score = run_evaluation('${{ steps.find_file.outputs.submission_file }}');
+          score = run_evaluation('${{ steps.decrypt.outputs.decrypted_file }}');
           print(f'{score:.6f}')
           EOF
           )
           echo "Evaluation complete. Score: $SCORE"
           echo "score=$SCORE" >> $GITHUB_OUTPUT
+          
+          # Clean up decrypted file
+          rm "${{ steps.decrypt.outputs.decrypted_file }}"
 
       - name: Update leaderboard
         run: |
