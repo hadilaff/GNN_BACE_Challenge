@@ -1,0 +1,17 @@
+# Prevent unencrypted submissions from entering the repo
+submissions/inbox/submission.csv
+
+# Private key (CRITICAL: Do not commit this!)
+competition/submission_key
+
+# Python artifacts
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+
+# Local environment
+.venv/
+env/
+venv/
+.env
