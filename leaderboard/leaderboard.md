@@ -2,4 +2,5 @@
 
 This leaderboard is automatically updated after each valid submission.
 
-No submissions yet. Be the first!
+| Rank   | Team   | Model   | Score (Macro F1)   | Submitted At (UTC)   | Notes   |
+|--------|--------|---------|--------------------|----------------------|---------|
