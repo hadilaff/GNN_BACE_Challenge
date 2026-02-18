@@ -29,19 +29,57 @@ def render_leaderboard():
     display_df = df[['rank', 'team', 'model', 'score', 'timestamp_utc', 'notes']]
     display_df.columns = ['Rank', 'Team', 'Model', 'Score (Macro F1)', 'Submitted At (UTC)', 'Notes']
 
-    # ... (HTML generation part is fine) ...
+    # HTML content with modern styling linking to external CSS
     html_content = f"""
     <!DOCTYPE html>
     <html lang="en">
     <head>
         <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>GNN Challenge Leaderboard</title>
-        <style> ... </style>
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+        <link rel="stylesheet" href="leaderboard.css">
     </head>
-    <body>
-        <h1>📊 Leaderboard</h1>
-        <p>This leaderboard is automatically updated after each valid submission.</p>
-        {display_df.to_html(index=False, escape=False)}
+    <body class="bg-gray-50">
+        <div class="container">
+            <header>
+                <h1>📊 Leaderboard</h1>
+                <p class="subtitle">Real-time standings for the GNN BACE-1 Inhibition Challenge</p>
+            </header>
+            
+            <div class="table-container">
+                {display_df.to_html(index=False, escape=False, classes='leaderboard-table')}
+            </div>
+
+            <div class="footer">
+                <p>Updated automatically after each valid submission. Last calculation: {pd.Timestamp.now(tz='UTC').strftime('%Y-%m-%d %H:%M:%S')} UTC</p>
+                <p><a href="https://github.com/hadilaff/GNN_BACE_Challenge" style="color: var(--accent-color); text-decoration: none;">View Challenge Repository</a></p>
+            </div>
+        </div>
+        
+        <script>
+            // Enhance the pandas table with badges and formatting
+            document.addEventListener('DOMContentLoaded', () => {{
+                const rows = document.querySelectorAll('tbody tr');
+                rows.forEach(row => {{
+                    const rankCell = row.cells[0];
+                    const rankValue = rankCell.textContent.trim();
+                    const rank = parseInt(rankValue);
+                    
+                    if (!isNaN(rank) && rank <= 3) {{
+                        rankCell.innerHTML = `<span class="rank-badge rank-${{rank}}">${{rank}}</span>`;
+                    }}
+                    
+                    const scoreCell = row.cells[3];
+                    scoreCell.classList.add('score-cell');
+                    
+                    const timeCell = row.cells[4];
+                    timeCell.classList.add('timestamp');
+                }});
+            }});
+        </script>
     </body>
     </html>
     """
