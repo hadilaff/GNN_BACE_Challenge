@@ -109,13 +109,16 @@ jobs:
           # Team is now the github.actor to enforce one submission per person
           echo "${TIMESTAMP_UTC},${{ github.actor }},${TEAM_MODEL_NAME},${{ steps.evaluate.outputs.score }},\"PR #${{ github.event.number }}\"" >> leaderboard/leaderboard.csv
           
-          echo "Current leaderboard content:"
+          echo "Rendering leaderboard HTML and Markdown..."
+          python competition/render_leaderboard.py
+          
+          echo "Current leaderboard CSV content:"
           cat leaderboard/leaderboard.csv
 
       - name: Commit and push leaderboard update
         run: |
-          echo "Committing and pushing leaderboard update..."
-          git add leaderboard/leaderboard.csv
+          echo "Committing and pushing leaderboard updates..."
+          git add leaderboard/leaderboard.csv leaderboard/leaderboard.md docs/leaderboard.html
           if git diff --staged --quiet; then
             echo "No changes to commit. Something went wrong."
             exit 1
