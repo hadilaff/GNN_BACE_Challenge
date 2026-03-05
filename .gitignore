@@ -4,6 +4,9 @@ submissions/inbox/submission.csv
 # Private key (CRITICAL: Do not commit this!)
 competition/submission_key
 
+# Ground truth test labels (CRITICAL: Do not commit this - it would reveal answers!)
+data/public/test_labels.csv
+
 # Python artifacts
 __pycache__/
 *.pyc
