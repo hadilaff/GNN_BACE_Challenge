@@ -14,7 +14,6 @@ This leaderboard is automatically updated after each valid submission.
 |      8 | idrees11       | my-submission   |           0.499107 | 2026-03-23T05:12:55Z | PR #19  |
 |      9 | Sargam1412     | main            |           0.484848 | 2026-04-03T14:58:20Z | PR #25  |
 |     10 | abdksm         | my-submission   |           0.402444 | 2026-03-13T17:05:38Z | PR #17  |
-|     11 | samuelmatia    | main            |           0.390879 | 2026-03-07T23:11:58Z | PR #13  |
 |     11 | SanaeZR        | gin-improvement |           0.390879 | 2026-03-09T21:18:33Z | PR #16  |
-|     11 | El-Ikram       | main            |           0.390879 | 2026-03-07T17:15:51Z | PR #10  |
+|     11 | samuelmatia    | main            |           0.390879 | 2026-03-07T23:11:58Z | PR #13  |
 |     11 | Mubarraqqq     | Mubaraq         |           0.390879 | 2026-03-25T18:15:18Z | PR #21  |
